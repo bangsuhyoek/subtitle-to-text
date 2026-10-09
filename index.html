@@ -3,190 +3,205 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Subtitle to Text – Free SRT &amp; VTT Transcript Converter</title>
-  <meta name="description" content="Convert SRT and VTT subtitles to clean readable text transcripts online for free. Strips timestamps, cue numbers, and duplicates completely in your browser.">
+  <title>Subtitle to Text — Turn SRT and VTT into clean, readable text</title>
+  <meta name="description" content="Turn SRT and VTT subtitles into clean, readable text transcripts in your browser. Fast, client-side, zero tracking.">
   <link rel="canonical" href="https://bangsuhyoek.github.io/subtitle-to-text/">
 
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://bangsuhyoek.github.io/subtitle-to-text/">
-  <meta property="og:title" content="Subtitle to Text – Free SRT &amp; VTT Transcript Converter">
-  <meta property="og:description" content="Convert SRT and VTT subtitles to clean readable text transcripts online for free. Strips timestamps, cue numbers, and duplicates completely in your browser.">
+  <meta property="og:title" content="Subtitle to Text — Turn SRT and VTT into clean, readable text">
+  <meta property="og:description" content="Turn SRT and VTT subtitles into clean, readable text transcripts in your browser. Fast, client-side, zero tracking.">
   <meta property="og:image" content="https://bangsuhyoek.github.io/subtitle-to-text/og-image.png">
 
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:url" content="https://bangsuhyoek.github.io/subtitle-to-text/">
-  <meta name="twitter:title" content="Subtitle to Text – Free SRT &amp; VTT Transcript Converter">
-  <meta name="twitter:description" content="Convert SRT and VTT subtitles to clean readable text transcripts online for free. Strips timestamps, cue numbers, and duplicates completely in your browser.">
+  <meta name="twitter:title" content="Subtitle to Text — Turn SRT and VTT into clean, readable text">
+  <meta name="twitter:description" content="Turn SRT and VTT subtitles into clean, readable text transcripts in your browser. Fast, client-side, zero tracking.">
   <meta name="twitter:image" content="https://bangsuhyoek.github.io/subtitle-to-text/og-image.png">
 
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header class="site-header">
-    <div class="container header-inner">
-      <div class="logo-area">
-        <div class="logo-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path><line x1="8" y1="10" x2="16" y2="10"></line><line x1="8" y1="14" x2="12" y2="14"></line></svg>
-        </div>
-        <div>
-          <h1 class="site-title">Subtitle to Text</h1>
-          <p class="site-tagline">Convert .srt &amp; .vtt files into clean, readable transcripts</p>
-        </div>
-      </div>
-      <div class="privacy-badge" title="100% Client-Side Processing">
-        <span class="pulse-dot"></span>
-        <span>100% Client-Side • Your files never leave your device</span>
+  <!-- Top Bar: One line, wordmark left, privacy note + GitHub right -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">Subtitle to Text</div>
+      <div class="topbar-right">
+        <span class="privacy-note">Runs in your browser. Files never leave your device.</span>
+        <a href="https://github.com/bangsuhyoek/subtitle-to-text" class="github-link" target="_blank" rel="noopener">GitHub</a>
       </div>
     </div>
   </header>
 
-  <main class="container main-content">
-    <!-- Input Section -->
-    <section class="card input-section" aria-labelledby="input-heading">
-      <div class="section-header">
-        <h2 id="input-heading" class="section-title">1. Upload or Paste Subtitles</h2>
-        <span class="file-support-tag">Supports .srt &amp; .vtt</span>
+  <main class="page-container">
+    <!-- Header Title -->
+    <header class="page-header">
+      <h1 class="page-title">Turn SRT and VTT subtitles into clean, readable text.</h1>
+    </header>
+
+    <!-- Toolbar: Options as a single thin toolbar -->
+    <section class="toolbar" aria-label="Formatting options">
+      <div class="toolbar-group">
+        <span class="toolbar-label">Paragraphs</span>
+        <div class="segmented-control" role="radiogroup" aria-label="Paragraph Structure">
+          <button type="button" class="segment-btn active" data-mode="gap" role="radio" aria-checked="true">Pauses</button>
+          <button type="button" class="segment-btn" data-mode="sentence" role="radio" aria-checked="false">Sentences</button>
+          <button type="button" class="segment-btn" data-mode="cues" role="radio" aria-checked="false">Lines</button>
+          <button type="button" class="segment-btn" data-mode="continuous" role="radio" aria-checked="false">One block</button>
+        </div>
+        <!-- Hidden select for compatibility -->
+        <select id="paragraphMode" class="visually-hidden" aria-hidden="true">
+          <option value="gap" selected>Pauses</option>
+          <option value="sentence">Sentences</option>
+          <option value="cues">Lines</option>
+          <option value="continuous">One block</option>
+        </select>
       </div>
 
-      <!-- Drop Zone -->
-      <div id="dropzone" class="dropzone" tabindex="0" role="region" aria-label="Subtitle file dropzone">
-        <input type="file" id="fileInput" multiple accept=".srt,.vtt,text/vtt,text/plain" class="visually-hidden">
-        <div class="dropzone-content">
-          <div class="drop-icon">
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-          </div>
-          <p class="dropzone-primary"><strong>Drop SRT / VTT files here</strong> or <button type="button" id="browseBtn" class="link-btn">browse files</button></p>
-          <p class="dropzone-secondary">Multiple files supported • Batch converter enabled</p>
+      <div class="toolbar-group" id="gapOptionItem">
+        <label for="gapThreshold" class="toolbar-label">Pause</label>
+        <div class="input-suffix-wrapper">
+          <input type="number" id="gapThreshold" class="number-input" min="0.5" max="10.0" step="0.5" value="2.0">
+          <span class="input-suffix">s</span>
         </div>
       </div>
 
-      <!-- Or Paste Text Area -->
-      <div class="paste-wrapper">
-        <label for="pasteInput" class="paste-label">Or paste subtitle text directly:</label>
-        <textarea id="pasteInput" class="paste-textarea" rows="4" placeholder="Paste .srt or .vtt raw text here..."></textarea>
+      <div class="toolbar-group">
+        <label for="timestampOption" class="toolbar-label">Timestamps</label>
+        <select id="timestampOption" class="toolbar-select">
+          <option value="none" selected>None</option>
+          <option value="60">Every 1 min</option>
+          <option value="120">Every 2 min</option>
+          <option value="300">Every 5 min</option>
+          <option value="cue">Every cue</option>
+        </select>
       </div>
 
-      <!-- Active Files Pill List -->
-      <div id="fileTabsWrapper" class="file-tabs-wrapper hidden">
-        <span class="file-tabs-label">Files:</span>
-        <div id="fileTabs" class="file-tabs" role="tablist"></div>
-      </div>
-    </section>
+      <div class="toolbar-separator"></div>
 
-    <!-- Options Section -->
-    <section class="card options-section" aria-labelledby="options-heading">
-      <h2 id="options-heading" class="section-title">2. Formatting Options</h2>
-      <div class="options-grid">
-        <div class="option-item">
-          <label for="paragraphMode" class="option-label">Paragraph Structure</label>
-          <select id="paragraphMode" class="form-select">
-            <option value="gap" selected>Natural pause gap (&gt; 2 sec pause)</option>
-            <option value="sentence">Sentence boundary (. ! ?)</option>
-            <option value="cues">One line per cue</option>
-            <option value="continuous">Continuous single paragraph</option>
-          </select>
-        </div>
-
-        <div class="option-item" id="gapOptionItem">
-          <label for="gapThreshold" class="option-label">Pause Gap Threshold (seconds)</label>
-          <input type="number" id="gapThreshold" class="form-input" min="0.5" max="10.0" step="0.5" value="2.0">
-        </div>
-
-        <div class="option-item">
-          <label for="timestampOption" class="option-label">Include Timestamps</label>
-          <select id="timestampOption" class="form-select">
-            <option value="none" selected>None (Clean text only)</option>
-            <option value="60">Every 1 minute [00:01:00]</option>
-            <option value="120">Every 2 minutes [00:02:00]</option>
-            <option value="300">Every 5 minutes [00:05:00]</option>
-            <option value="cue">Every subtitle cue</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="checkbox-row">
-        <label class="checkbox-label">
+      <div class="toolbar-group toolbar-toggles">
+        <label class="toggle-label" title="Keep speaker labels (e.g. Speaker: Speech)">
           <input type="checkbox" id="keepSpeakers" checked>
-          <span>Keep speaker labels (e.g. <code>Speaker: Speech</code> from <code>&lt;v&gt;</code>)</span>
+          <span>Speakers</span>
         </label>
-        <label class="checkbox-label">
+        <label class="toggle-label" title="Remove sound effects like [Music] or (Applause)">
           <input type="checkbox" id="removeSoundTags" checked>
-          <span>Remove sound tags (e.g. <code>[Music]</code>, <code>(Applause)</code>, <code>♪</code>)</span>
+          <span>Remove [Music]</span>
         </label>
-        <label class="checkbox-label">
+        <label class="toggle-label" title="Deduplicate YouTube rolling captions & repeated lines">
           <input type="checkbox" id="dedupeRolling" checked>
-          <span>Deduplicate YouTube rolling captions &amp; repeated overlaps</span>
+          <span>Merge YouTube repeats</span>
         </label>
       </div>
     </section>
 
-    <!-- Output Section -->
-    <section class="card output-section" aria-labelledby="output-heading">
-      <div class="output-header">
-        <div>
-          <h2 id="output-heading" class="section-title">3. Transcript Output</h2>
-          <div id="statsBar" class="stats-bar">
-            <span id="wordCount">0 words</span> • 
-            <span id="charCount">0 characters</span> • 
-            <span id="readTime">0 min read</span>
+    <!-- Workspace: Two panes side by side on desktop -->
+    <div class="workspace">
+      <!-- Left Pane: Subtitles (Input) -->
+      <section class="pane pane-input" id="dropzone" aria-label="Subtitle input">
+        <div class="pane-header">
+          <div class="pane-title-group">
+            <span class="pane-title">Subtitles</span>
+            <span class="pane-badge">SRT or VTT</span>
+          </div>
+          <div class="pane-actions">
+            <button type="button" id="clearBtn" class="text-btn text-btn-muted hidden">Clear</button>
           </div>
         </div>
-        <div class="action-buttons">
-          <button type="button" id="copyBtn" class="btn btn-secondary">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-            <span>Copy</span>
-          </button>
-          <button type="button" id="downloadBtn" class="btn btn-primary">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-            <span>Download .txt</span>
-          </button>
-          <button type="button" id="downloadAllBtn" class="btn btn-outline hidden">
-            <span>Download Combined</span>
-          </button>
-          <button type="button" id="clearBtn" class="btn btn-ghost" title="Clear all">Clear</button>
-        </div>
-      </div>
 
-      <div class="output-wrapper">
-        <textarea id="outputArea" class="output-textarea" placeholder="Your clean transcript will appear here..." readonly></textarea>
+        <!-- File Tab Strip (visible when multiple files are loaded) -->
+        <div id="fileTabsWrapper" class="file-tabs-strip hidden">
+          <div id="fileTabs" class="file-tabs" role="tablist"></div>
+        </div>
+
+        <div class="input-editor-wrapper">
+          <textarea id="pasteInput" class="editor-textarea" spellcheck="false" placeholder=""></textarea>
+          
+          <!-- Empty State Overlay (inside pane) -->
+          <div id="emptyState" class="empty-state-overlay">
+            <div class="empty-state-prompt">
+              <span class="empty-lead">Drop .srt or .vtt files, paste text, or</span>
+              <div class="empty-actions">
+                <button type="button" id="browseBtn" class="action-link-btn">choose files</button>
+                <span class="empty-sep">·</span>
+                <button type="button" id="sampleBtn" class="action-link-btn">try a YouTube sample</button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Hidden file input -->
+          <input type="file" id="fileInput" multiple accept=".srt,.vtt,text/vtt,text/plain" class="visually-hidden">
+        </div>
+      </section>
+
+      <!-- Right Pane: Transcript (Output) -->
+      <section class="pane pane-output" aria-label="Transcript output">
+        <div class="pane-header">
+          <div class="pane-title-group">
+            <span class="pane-title">Transcript</span>
+            <div id="statsBar" class="pane-stats">
+              <span id="wordCount">0 words</span>
+              <span class="stat-sep">·</span>
+              <span id="charCount" class="visually-hidden">0 characters</span>
+              <span id="readTime">0 min read</span>
+            </div>
+          </div>
+
+          <div class="pane-actions">
+            <button type="button" id="copyBtn" class="text-btn">Copy</button>
+            <button type="button" id="downloadBtn" class="text-btn">Download .txt</button>
+            <button type="button" id="downloadAllBtn" class="text-btn hidden">Download all</button>
+          </div>
+        </div>
+
+        <div class="output-document-wrapper">
+          <div id="outputDisplay" class="document-flow" aria-live="polite">
+            <p class="placeholder-text">Your clean transcript will appear here.</p>
+          </div>
+          <!-- Hidden textarea kept for seamless programmatic copying / testing -->
+          <textarea id="outputArea" class="visually-hidden" readonly></textarea>
+        </div>
+      </section>
+    </div>
+
+    <!-- Below Workspace: Explainer & FAQ -->
+    <section class="explainer-section">
+      <h2 class="section-heading">How it works</h2>
+      <div class="how-it-works-grid">
+        <p>1. Drag any .srt or .vtt subtitle file into the editor, or paste raw caption text.</p>
+        <p>2. Timestamps, cue markers, HTML tags, and YouTube rolling duplications are removed instantly.</p>
+        <p>3. Text is grouped into paragraphs by natural speaker pauses, ready to copy or download as clean prose.</p>
       </div>
     </section>
 
-    <!-- FAQ Section -->
-    <section class="card faq-section" aria-labelledby="faq-heading">
-      <h2 id="faq-heading" class="section-title">Frequently Asked Questions</h2>
+    <section class="faq-section">
+      <h2 class="section-heading">Frequently asked questions</h2>
       <div class="faq-list">
-        <details class="faq-item" open>
-          <summary class="faq-question">How do I convert an SRT file to clean text?</summary>
+        <details class="faq-item">
+          <summary class="faq-question">How are timestamps and numbers removed?</summary>
           <div class="faq-answer">
-            <p>Simply drag and drop your <code>.srt</code> file into the upload box above, or paste its raw contents into the text box. The converter instantly strips sequential cue numbers, millisecond timestamps (like <code>00:01:23,456 --&gt; 00:01:25,789</code>), and formatting tags, assembling the dialogue into readable, well-spaced paragraphs.</p>
+            <p>The parser matches standard subtitle cue blocks, strips numeric counters and millisecond timing markers (such as <code>00:01:23,456 --&gt; 00:01:25,789</code>), and extracts only dialogue text.</p>
           </div>
         </details>
         <details class="faq-item">
-          <summary class="faq-question">How do I convert a WebVTT (.vtt) file to text?</summary>
+          <summary class="faq-question">How does it handle WebVTT tags and styling?</summary>
           <div class="faq-answer">
-            <p>WebVTT files contain header lines (<code>WEBVTT</code>), comment blocks (<code>NOTE</code>), styling rules (<code>STYLE</code>), cue settings (such as <code>position:20% align:start</code>), and speaker tags (<code>&lt;v Speaker&gt;</code>). Our parser automatically skips non-dialogue metadata, retains speaker labels if desired, and outputs pristine text.</p>
+            <p>WebVTT headers, <code>NOTE</code> comments, <code>STYLE</code> blocks, and cue positioning metadata are skipped. Inline voice tags (<code>&lt;v Name&gt;</code>) are converted into clean speaker prefixes, and sound annotations like <code>[Music]</code> can be stripped automatically.</p>
           </div>
         </details>
         <details class="faq-item">
-          <summary class="faq-question">How do I remove timestamps from YouTube transcripts?</summary>
+          <summary class="faq-question">What causes YouTube auto-captions to repeat words?</summary>
           <div class="faq-answer">
-            <p>On YouTube, click the three dots below any video and choose <strong>Show transcript</strong>. Copy the entire transcript or download the auto-generated caption file, then paste it here. Our tool strips all timestamps and automatically removes YouTube's overlapping duplicate lines.</p>
+            <p>YouTube auto-captions generate rolling teleprompter cues where each cue repeats the previous cue's second line. Subtitle to Text detects overlapping rolling suffixes and merges them into a single clean sentence without repeated phrases.</p>
           </div>
         </details>
         <details class="faq-item">
-          <summary class="faq-question">Why do YouTube auto-captions duplicate words or lines?</summary>
+          <summary class="faq-question">Do files ever leave my computer?</summary>
           <div class="faq-answer">
-            <p>YouTube generates rolling captions for live and auto-generated videos. Each subtitle cue repeats the previous cue's second line to create a smooth teleprompter scroll. Traditional text extractors create repetitive text like <em>"hello world hello world how are you"</em>. Our intelligent deduplication detects and eliminates these rolling repetitions.</p>
-          </div>
-        </details>
-        <details class="faq-item">
-          <summary class="faq-question">Are my subtitle files uploaded to a remote server?</summary>
-          <div class="faq-answer">
-            <p><strong>No.</strong> All parsing and transcript formatting executes 100% locally in your web browser via client-side JavaScript. Your subtitle files, video scripts, and personal transcripts never leave your computer or touch any external server.</p>
+            <p>No. Processing runs entirely in your local browser using client-side JavaScript. No audio, subtitles, or transcripts are uploaded to any server or remote service.</p>
           </div>
         </details>
       </div>
@@ -194,14 +209,10 @@
   </main>
 
   <footer class="site-footer">
-    <div class="container footer-inner">
-      <p>&copy; 2026 Subtitle to Text. Free, open source under the <a href="https://github.com/bangsuhyoek/subtitle-to-text/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
-      <p><a href="https://github.com/bangsuhyoek/subtitle-to-text" target="_blank" rel="noopener">GitHub Repository</a> • Privacy-first client-side web application</p>
+    <div class="footer-inner">
+      <span>Subtitle to Text · Open source under the <a href="https://github.com/bangsuhyoek/subtitle-to-text/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</span>
     </div>
   </footer>
-
-  <!-- Notification Toast -->
-  <div id="toast" class="toast hidden" role="status" aria-live="polite">Copied to clipboard!</div>
 
   <script type="module" src="app.js"></script>
 </body>
