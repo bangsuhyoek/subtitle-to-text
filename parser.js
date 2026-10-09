@@ -53,27 +53,33 @@ export function formatTimestamp(seconds, forceHours = false) {
   return `[${pad(mins)}:${pad(secs)}]`;
 }
 
+export function extractSpeakerAndCleanSpeech(rawText) {
+  let speaker = null;
+  let text = rawText;
+
+  // Check for <v Speaker> or <v.class Speaker>
+  const vRegex = new RegExp("<v(?:\\.[^ >]+)?\\s+([^>]+)>(.*?)(?:<\\/v>|$)", "is");
+  const vMatch = text.match(vRegex);
+  if (vMatch) {
+    speaker = vMatch[1].trim().replace(/["']/g, "");
+    text = text.replace(new RegExp("<v(?:\\.[^ >]+)?\\s+([^>]+)>(.*?)(?:<\\/v>|$)", "gis"), "$2");
+  } else {
+    text = text.replace(new RegExp("<\\/?v(?:\\.[^ >]+)?(?:\\s+[^>]+)?>", "gi"), "");
+  }
+
+  return { speaker, text };
+}
+
 export function cleanCueText(rawText, options = {}) {
   const {
     keepSpeakerLabels = true,
     removeSoundTags = false,
   } = options;
 
-  let text = rawText;
+  let { speaker, text } = extractSpeakerAndCleanSpeech(rawText);
 
   // Handle ASS/SSA override tags like {\an8}, {\pos(x,y)}
   text = text.replace(/\{[^}]*\}/g, "");
-
-  // Extract or strip speaker labels from <v Speaker> or <v.class Speaker>
-  if (keepSpeakerLabels) {
-    text = text.replace(/<v(?:\.[^ >]+)?\s+([^>]+)>(.*?)(?:<\/v>|$)/gis, (match, speaker, speech) => {
-      const cleanSpeaker = speaker.trim().replace(/["']/g, "");
-      const cleanSpeech = speech.trim();
-      return cleanSpeaker ? `${cleanSpeaker}: ${cleanSpeech}` : cleanSpeech;
-    });
-  } else {
-    text = text.replace(/<\/?v(?:\.[^ >]+)?(?:\s+[^>]+)?>/gi, "");
-  }
 
   // Strip YouTube word-timing tags like <00:00:01.234>, <01:23.456>, <00:01:23,456>
   text = text.replace(/<(?:\d{1,2}:)?\d{2}:\d{2}[.,]\d{3}>/g, "");
@@ -91,7 +97,14 @@ export function cleanCueText(rawText, options = {}) {
     text = text.replace(/[♪♫]+/g, "");
   }
 
-  return text.trim();
+  text = text.trim();
+
+  // If keepSpeakerLabels is true and speaker exists, prepend speaker label
+  if (keepSpeakerLabels && speaker && text) {
+    return `${speaker}: ${text}`;
+  }
+
+  return text;
 }
 
 export function parseCues(content, options = {}) {
@@ -205,13 +218,24 @@ function finalizeCue(cue, options) {
     }
   }
   const rawText = dedupedLines.join("\n");
-  const cleaned = cleanCueText(rawText, options);
+
+  // Extract speaker if present in raw text
+  const { speaker, text: strippedSpeechRaw } = extractSpeakerAndCleanSpeech(rawText);
+
+  // Clean the spoken text WITHOUT speaker prefix
+  const speechOnly = cleanCueText(strippedSpeechRaw, { ...options, keepSpeakerLabels: false });
+
+  // Clean full text WITH speaker prefix for backward compatibility where needed
+  const fullCleaned = cleanCueText(rawText, options);
+
   return {
     id: cue.id,
     start: cue.start,
     end: cue.end,
     rawText,
-    text: cleaned,
+    speaker: speaker || null,
+    speech: speechOnly,
+    text: fullCleaned,
   };
 }
 
@@ -222,21 +246,28 @@ export function deduplicateRollingCaptions(cues) {
 
   for (let i = 0; i < cues.length; i++) {
     const cue = cues[i];
-    if (!cue.text) continue;
+    // Dedupe on spoken speech text (without speaker prefix) if present, fallback to cue.text
+    const textToMatch = (cue.speech !== undefined ? cue.speech : cue.text) || "";
+    if (!textToMatch) continue;
 
     if (result.length === 0) {
-      result.push({ ...cue });
+      result.push({
+        ...cue,
+        speech: textToMatch,
+        text: cue.speaker ? `${cue.speaker}: ${textToMatch}` : textToMatch,
+      });
       continue;
     }
 
     const prev = result[result.length - 1];
+    const prevTextToMatch = (prev.speech !== undefined ? prev.speech : prev.text) || "";
 
-    if (cue.text.toLowerCase() === prev.text.toLowerCase()) {
+    if (textToMatch.toLowerCase() === prevTextToMatch.toLowerCase()) {
       continue;
     }
 
-    const prevLines = prev.text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-    const currLines = cue.text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    const prevLines = prevTextToMatch.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    const currLines = textToMatch.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
 
     let filteredCurrLines = currLines;
     if (prevLines.length > 0 && currLines.length > 1) {
@@ -248,7 +279,7 @@ export function deduplicateRollingCaptions(cues) {
 
     let candidateText = filteredCurrLines.join(" ");
 
-    const prevWords = prev.text.split(/\s+/).filter(Boolean);
+    const prevWords = prevTextToMatch.split(/\s+/).filter(Boolean);
     const currWords = candidateText.split(/\s+/).filter(Boolean);
 
     if (prevWords.length > 0 && currWords.length > 0) {
@@ -276,7 +307,8 @@ export function deduplicateRollingCaptions(cues) {
 
     result.push({
       ...cue,
-      text: cleanCandidate,
+      speech: cleanCandidate,
+      text: cue.speaker ? `${cue.speaker}: ${cleanCandidate}` : cleanCandidate,
     });
   }
 
@@ -289,6 +321,7 @@ export function formatTranscript(cues, options = {}) {
     gapThreshold = 2.0,
     timestampInterval = 0,
     timestampsEveryCue = false,
+    keepSpeakerLabels = true,
   } = options;
 
   if (!cues || cues.length === 0) return "";
@@ -297,12 +330,13 @@ export function formatTranscript(cues, options = {}) {
   let currentParagraph = [];
   let lastTimestampMarked = -1;
   let lastCue = null;
+  let currentSpeaker = null;
 
   for (let i = 0; i < cues.length; i++) {
     const cue = cues[i];
-    // Replace internal newlines in cue with single space for clean prose
-    let cueText = cue.text.replace(/\r?\n/g, " ").trim();
-    if (!cueText) continue;
+    // Spoken text clean of speaker prefix
+    const spokenText = (cue.speech !== undefined ? cue.speech : cue.text).replace(/\r?\n/g, " ").trim();
+    if (!spokenText) continue;
 
     let timestampPrefix = "";
     if (timestampsEveryCue) {
@@ -317,8 +351,13 @@ export function formatTranscript(cues, options = {}) {
     }
 
     let needNewParagraph = false;
+    const speakerChanged = cue.speaker !== currentSpeaker;
+
     if (lastCue && currentParagraph.length > 0) {
-      if (paragraphBreakMode === "cues") {
+      if (keepSpeakerLabels && cue.speaker && speakerChanged) {
+        // Speaker change starts a new paragraph
+        needNewParagraph = true;
+      } else if (paragraphBreakMode === "cues") {
         needNewParagraph = true;
       } else if (paragraphBreakMode === "gap") {
         const gap = cue.start - lastCue.end;
@@ -326,7 +365,7 @@ export function formatTranscript(cues, options = {}) {
           needNewParagraph = true;
         }
       } else if (paragraphBreakMode === "sentence") {
-        const prevText = lastCue.text.trim();
+        const prevText = (lastCue.speech !== undefined ? lastCue.speech : lastCue.text).trim();
         if (/[.?!][)"']?$/.test(prevText)) {
           needNewParagraph = true;
         }
@@ -346,7 +385,18 @@ export function formatTranscript(cues, options = {}) {
       currentParagraph = [];
     }
 
-    currentParagraph.push(timestampPrefix && !timestampPrefix.includes("\n\n") ? (timestampPrefix + cueText).trim() : cueText);
+    // Determine text to add: only prepend speaker label if keepSpeakerLabels is true AND speaker changed
+    let textToAdd = spokenText;
+    if (keepSpeakerLabels && cue.speaker) {
+      if (speakerChanged || currentParagraph.length === 0) {
+        textToAdd = `${cue.speaker}: ${spokenText}`;
+        currentSpeaker = cue.speaker;
+      }
+    } else {
+      currentSpeaker = null;
+    }
+
+    currentParagraph.push(timestampPrefix && !timestampPrefix.includes("\n\n") ? (timestampPrefix + textToAdd).trim() : textToAdd);
     lastCue = cue;
   }
 

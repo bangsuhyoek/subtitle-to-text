@@ -203,3 +203,42 @@ test("getTranscriptStats calculates words and reading time", () => {
   assert.equal(stats.words, 5);
   assert.equal(stats.readingTimeMinutes, 1);
 });
+
+test("rolling YouTube captions with <v Alex> on every cue emits single speaker prefix and no duplicates", () => {
+  const vtt = `WEBVTT
+
+00:00:01.000 --> 00:00:03.000
+<v Alex>Most auto-generated captions</v>
+repeat previous lines to smooth scrolling
+
+00:00:03.000 --> 00:00:05.000
+<v Alex>repeat previous lines to smooth scrolling</v>
+which creates duplicate sentences
+
+00:00:05.000 --> 00:00:07.000
+<v Alex>which creates duplicate sentences</v>
+when you copy the text into notes`;
+
+  const transcript = subtitleToText(vtt, { dedupeRolling: true, keepSpeakerLabels: true });
+  assert.equal(
+    transcript,
+    "Alex: Most auto-generated captions repeat previous lines to smooth scrolling which creates duplicate sentences when you copy the text into notes"
+  );
+});
+
+test("alternating speakers create a new paragraph per speaker change", () => {
+  const vtt = `WEBVTT
+
+00:00:01.000 --> 00:00:02.500
+<v Alex>Hello Maya, welcome to the show.</v>
+
+00:00:02.600 --> 00:00:04.000
+<v Maya>Thanks Alex, glad to be here.</v>
+
+00:00:04.100 --> 00:00:05.500
+<v Alex>Let us talk about subtitles.</v>`;
+
+  const transcript = subtitleToText(vtt, { keepSpeakerLabels: true });
+  const expected = "Alex: Hello Maya, welcome to the show.\n\nMaya: Thanks Alex, glad to be here.\n\nAlex: Let us talk about subtitles.";
+  assert.equal(transcript, expected);
+});
