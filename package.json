@@ -1,0 +1,12 @@
+{
+  "name": "subtitle-to-text",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Free, no-signup, fully client-side SRT/VTT subtitle to text transcript converter",
+  "scripts": {
+    "test": "node --test"
+  },
+  "keywords": ["srt", "vtt", "subtitles", "transcript", "converter"],
+  "author": "bangsuhyoek",
+  "license": "MIT"
+}

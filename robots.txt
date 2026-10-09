@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://bangsuhyoek.github.io/subtitle-to-text/sitemap.xml

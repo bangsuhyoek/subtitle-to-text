@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Subtitle to Text – Free SRT &amp; VTT Transcript Converter</title>
+  <meta name="description" content="Convert SRT and VTT subtitles to clean readable text transcripts online for free. Strips timestamps, cue numbers, and duplicates completely in your browser.">
+  <link rel="canonical" href="https://bangsuhyoek.github.io/subtitle-to-text/">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://bangsuhyoek.github.io/subtitle-to-text/">
+  <meta property="og:title" content="Subtitle to Text – Free SRT &amp; VTT Transcript Converter">
+  <meta property="og:description" content="Convert SRT and VTT subtitles to clean readable text transcripts online for free. Strips timestamps, cue numbers, and duplicates completely in your browser.">
+  <meta property="og:image" content="https://bangsuhyoek.github.io/subtitle-to-text/og-image.png">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="https://bangsuhyoek.github.io/subtitle-to-text/">
+  <meta name="twitter:title" content="Subtitle to Text – Free SRT &amp; VTT Transcript Converter">
+  <meta name="twitter:description" content="Convert SRT and VTT subtitles to clean readable text transcripts online for free. Strips timestamps, cue numbers, and duplicates completely in your browser.">
+  <meta name="twitter:image" content="https://bangsuhyoek.github.io/subtitle-to-text/og-image.png">
+
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <div class="logo-area">
+        <div class="logo-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path><line x1="8" y1="10" x2="16" y2="10"></line><line x1="8" y1="14" x2="12" y2="14"></line></svg>
+        </div>
+        <div>
+          <h1 class="site-title">Subtitle to Text</h1>
+          <p class="site-tagline">Convert .srt &amp; .vtt files into clean, readable transcripts</p>
+        </div>
+      </div>
+      <div class="privacy-badge" title="100% Client-Side Processing">
+        <span class="pulse-dot"></span>
+        <span>100% Client-Side • Your files never leave your device</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="container main-content">
+    <!-- Input Section -->
+    <section class="card input-section" aria-labelledby="input-heading">
+      <div class="section-header">
+        <h2 id="input-heading" class="section-title">1. Upload or Paste Subtitles</h2>
+        <span class="file-support-tag">Supports .srt &amp; .vtt</span>
+      </div>
+
+      <!-- Drop Zone -->
+      <div id="dropzone" class="dropzone" tabindex="0" role="region" aria-label="Subtitle file dropzone">
+        <input type="file" id="fileInput" multiple accept=".srt,.vtt,text/vtt,text/plain" class="visually-hidden">
+        <div class="dropzone-content">
+          <div class="drop-icon">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+          </div>
+          <p class="dropzone-primary"><strong>Drop SRT / VTT files here</strong> or <button type="button" id="browseBtn" class="link-btn">browse files</button></p>
+          <p class="dropzone-secondary">Multiple files supported • Batch converter enabled</p>
+        </div>
+      </div>
+
+      <!-- Or Paste Text Area -->
+      <div class="paste-wrapper">
+        <label for="pasteInput" class="paste-label">Or paste subtitle text directly:</label>
+        <textarea id="pasteInput" class="paste-textarea" rows="4" placeholder="Paste .srt or .vtt raw text here..."></textarea>
+      </div>
+
+      <!-- Active Files Pill List -->
+      <div id="fileTabsWrapper" class="file-tabs-wrapper hidden">
+        <span class="file-tabs-label">Files:</span>
+        <div id="fileTabs" class="file-tabs" role="tablist"></div>
+      </div>
+    </section>
+
+    <!-- Options Section -->
+    <section class="card options-section" aria-labelledby="options-heading">
+      <h2 id="options-heading" class="section-title">2. Formatting Options</h2>
+      <div class="options-grid">
+        <div class="option-item">
+          <label for="paragraphMode" class="option-label">Paragraph Structure</label>
+          <select id="paragraphMode" class="form-select">
+            <option value="gap" selected>Natural pause gap (&gt; 2 sec pause)</option>
+            <option value="sentence">Sentence boundary (. ! ?)</option>
+            <option value="cues">One line per cue</option>
+            <option value="continuous">Continuous single paragraph</option>
+          </select>
+        </div>
+
+        <div class="option-item" id="gapOptionItem">
+          <label for="gapThreshold" class="option-label">Pause Gap Threshold (seconds)</label>
+          <input type="number" id="gapThreshold" class="form-input" min="0.5" max="10.0" step="0.5" value="2.0">
+        </div>
+
+        <div class="option-item">
+          <label for="timestampOption" class="option-label">Include Timestamps</label>
+          <select id="timestampOption" class="form-select">
+            <option value="none" selected>None (Clean text only)</option>
+            <option value="60">Every 1 minute [00:01:00]</option>
+            <option value="120">Every 2 minutes [00:02:00]</option>
+            <option value="300">Every 5 minutes [00:05:00]</option>
+            <option value="cue">Every subtitle cue</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="checkbox-row">
+        <label class="checkbox-label">
+          <input type="checkbox" id="keepSpeakers" checked>
+          <span>Keep speaker labels (e.g. <code>Speaker: Speech</code> from <code>&lt;v&gt;</code>)</span>
+        </label>
+        <label class="checkbox-label">
+          <input type="checkbox" id="removeSoundTags" checked>
+          <span>Remove sound tags (e.g. <code>[Music]</code>, <code>(Applause)</code>, <code>♪</code>)</span>
+        </label>
+        <label class="checkbox-label">
+          <input type="checkbox" id="dedupeRolling" checked>
+          <span>Deduplicate YouTube rolling captions &amp; repeated overlaps</span>
+        </label>
+      </div>
+    </section>
+
+    <!-- Output Section -->
+    <section class="card output-section" aria-labelledby="output-heading">
+      <div class="output-header">
+        <div>
+          <h2 id="output-heading" class="section-title">3. Transcript Output</h2>
+          <div id="statsBar" class="stats-bar">
+            <span id="wordCount">0 words</span> • 
+            <span id="charCount">0 characters</span> • 
+            <span id="readTime">0 min read</span>
+          </div>
+        </div>
+        <div class="action-buttons">
+          <button type="button" id="copyBtn" class="btn btn-secondary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            <span>Copy</span>
+          </button>
+          <button type="button" id="downloadBtn" class="btn btn-primary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            <span>Download .txt</span>
+          </button>
+          <button type="button" id="downloadAllBtn" class="btn btn-outline hidden">
+            <span>Download Combined</span>
+          </button>
+          <button type="button" id="clearBtn" class="btn btn-ghost" title="Clear all">Clear</button>
+        </div>
+      </div>
+
+      <div class="output-wrapper">
+        <textarea id="outputArea" class="output-textarea" placeholder="Your clean transcript will appear here..." readonly></textarea>
+      </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="card faq-section" aria-labelledby="faq-heading">
+      <h2 id="faq-heading" class="section-title">Frequently Asked Questions</h2>
+      <div class="faq-list">
+        <details class="faq-item" open>
+          <summary class="faq-question">How do I convert an SRT file to clean text?</summary>
+          <div class="faq-answer">
+            <p>Simply drag and drop your <code>.srt</code> file into the upload box above, or paste its raw contents into the text box. The converter instantly strips sequential cue numbers, millisecond timestamps (like <code>00:01:23,456 --&gt; 00:01:25,789</code>), and formatting tags, assembling the dialogue into readable, well-spaced paragraphs.</p>
+          </div>
+        </details>
+        <details class="faq-item">
+          <summary class="faq-question">How do I convert a WebVTT (.vtt) file to text?</summary>
+          <div class="faq-answer">
+            <p>WebVTT files contain header lines (<code>WEBVTT</code>), comment blocks (<code>NOTE</code>), styling rules (<code>STYLE</code>), cue settings (such as <code>position:20% align:start</code>), and speaker tags (<code>&lt;v Speaker&gt;</code>). Our parser automatically skips non-dialogue metadata, retains speaker labels if desired, and outputs pristine text.</p>
+          </div>
+        </details>
+        <details class="faq-item">
+          <summary class="faq-question">How do I remove timestamps from YouTube transcripts?</summary>
+          <div class="faq-answer">
+            <p>On YouTube, click the three dots below any video and choose <strong>Show transcript</strong>. Copy the entire transcript or download the auto-generated caption file, then paste it here. Our tool strips all timestamps and automatically removes YouTube's overlapping duplicate lines.</p>
+          </div>
+        </details>
+        <details class="faq-item">
+          <summary class="faq-question">Why do YouTube auto-captions duplicate words or lines?</summary>
+          <div class="faq-answer">
+            <p>YouTube generates rolling captions for live and auto-generated videos. Each subtitle cue repeats the previous cue's second line to create a smooth teleprompter scroll. Traditional text extractors create repetitive text like <em>"hello world hello world how are you"</em>. Our intelligent deduplication detects and eliminates these rolling repetitions.</p>
+          </div>
+        </details>
+        <details class="faq-item">
+          <summary class="faq-question">Are my subtitle files uploaded to a remote server?</summary>
+          <div class="faq-answer">
+            <p><strong>No.</strong> All parsing and transcript formatting executes 100% locally in your web browser via client-side JavaScript. Your subtitle files, video scripts, and personal transcripts never leave your computer or touch any external server.</p>
+          </div>
+        </details>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p>&copy; 2026 Subtitle to Text. Free, open source under the <a href="https://github.com/bangsuhyoek/subtitle-to-text/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="https://github.com/bangsuhyoek/subtitle-to-text" target="_blank" rel="noopener">GitHub Repository</a> • Privacy-first client-side web application</p>
+    </div>
+  </footer>
+
+  <!-- Notification Toast -->
+  <div id="toast" class="toast hidden" role="status" aria-live="polite">Copied to clipboard!</div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
