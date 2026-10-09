@@ -31,6 +31,8 @@ const downloadAllBtn = document.getElementById("downloadAllBtn");
 const clearBtn = document.getElementById("clearBtn");
 const toast = document.getElementById("toast");
 
+const NO_CUES_MESSAGE = "No subtitle cues found. Please ensure the file or pasted text is a valid .srt or .vtt file with timestamps (e.g. 00:00:01,000 --> 00:00:04,000).";
+
 // Initialize options listeners
 [paragraphMode, gapThreshold, timestampOption, keepSpeakers, removeSoundTags, dedupeRolling].forEach(el => {
   el.addEventListener("change", () => {
@@ -65,6 +67,7 @@ function getOptions() {
     timestampsEveryCue,
     keepSpeakerLabels: keepSpeakers.checked,
     removeSoundTags: removeSoundTags.checked,
+    dedupeRolling: dedupeRolling.checked,
   };
 }
 
@@ -75,14 +78,25 @@ function reprocessAll() {
   if (filesState.length > 0) {
     filesState.forEach(file => {
       file.transcript = subtitleToText(file.content, options);
-      file.stats = getTranscriptStats(file.transcript);
+      if (!file.transcript && file.content.trim()) {
+        file.transcript = NO_CUES_MESSAGE;
+        file.stats = { words: 0, characters: 0, readingTimeMinutes: 0 };
+      } else {
+        file.stats = getTranscriptStats(file.transcript);
+      }
     });
     renderActiveFile();
   } else if (pasteInput.value.trim()) {
-    const transcript = subtitleToText(pasteInput.value, options);
-    const stats = getTranscriptStats(transcript);
-    outputArea.value = transcript;
-    renderStats(stats);
+    const rawText = pasteInput.value.trim();
+    const transcript = subtitleToText(rawText, options);
+    if (!transcript) {
+      outputArea.value = NO_CUES_MESSAGE;
+      renderStats({ words: 0, characters: 0, readingTimeMinutes: 0 });
+    } else {
+      outputArea.value = transcript;
+      const stats = getTranscriptStats(transcript);
+      renderStats(stats);
+    }
   } else {
     outputArea.value = "";
     renderStats({ words: 0, characters: 0, readingTimeMinutes: 0 });
@@ -130,7 +144,7 @@ function renderActiveFile() {
   }
 }
 
-// File Handling
+// File Handling with Promise.all preserving exact input order
 browseBtn.addEventListener("click", (e) => {
   e.stopPropagation();
   fileInput.click();
@@ -163,32 +177,32 @@ fileInput.addEventListener("change", () => {
   }
 });
 
-function handleUploadedFiles(fileList) {
+async function handleUploadedFiles(fileList) {
   pasteInput.value = "";
   const filesArray = Array.from(fileList);
-  let loadedCount = 0;
 
-  filesState = [];
-
-  filesArray.forEach((file) => {
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const content = event.target.result;
-      filesState.push({
-        id: Math.random().toString(36).slice(2),
-        name: file.name,
-        content,
-        transcript: "",
-        stats: { words: 0, characters: 0, readingTimeMinutes: 0 },
+  const loadedFiles = await Promise.all(
+    filesArray.map(file => {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          resolve({
+            id: Math.random().toString(36).slice(2),
+            name: file.name,
+            content: event.target.result,
+            transcript: "",
+            stats: { words: 0, characters: 0, readingTimeMinutes: 0 },
+          });
+        };
+        reader.onerror = () => reject(reader.error);
+        reader.readAsText(file, "utf-8");
       });
-      loadedCount++;
-      if (loadedCount === filesArray.length) {
-        activeFileIndex = 0;
-        reprocessAll();
-      }
-    };
-    reader.readAsText(file, "utf-8");
-  });
+    })
+  );
+
+  filesState = loadedFiles;
+  activeFileIndex = 0;
+  reprocessAll();
 }
 
 // Paste handling
@@ -204,13 +218,12 @@ pasteInput.addEventListener("input", () => {
 // Copy button
 copyBtn.addEventListener("click", async () => {
   const text = outputArea.value;
-  if (!text) return;
+  if (!text || text === NO_CUES_MESSAGE) return;
 
   try {
     await navigator.clipboard.writeText(text);
     showToast("Copied to clipboard!");
   } catch {
-    // Fallback
     outputArea.select();
     document.execCommand("copy");
     showToast("Copied to clipboard!");
@@ -228,7 +241,7 @@ function showToast(message) {
 // Download active file
 downloadBtn.addEventListener("click", () => {
   const text = outputArea.value;
-  if (!text) return;
+  if (!text || text === NO_CUES_MESSAGE) return;
 
   let filename = "transcript.txt";
   if (filesState.length > 0 && filesState[activeFileIndex]) {
@@ -243,7 +256,11 @@ downloadBtn.addEventListener("click", () => {
 downloadAllBtn.addEventListener("click", () => {
   if (filesState.length === 0) return;
 
-  const combined = filesState.map(f => `=== ${f.name} ===\n\n${f.transcript}`).join("\n\n\n");
+  const combined = filesState
+    .filter(f => f.transcript && f.transcript !== NO_CUES_MESSAGE)
+    .map(f => `=== ${f.name} ===\n\n${f.transcript}`)
+    .join("\n\n\n");
+  if (!combined) return;
   triggerDownload("combined_transcripts.txt", combined);
 });
 

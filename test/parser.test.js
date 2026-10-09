@@ -30,6 +30,9 @@ test("cleanCueText handles HTML, tags, entities, and sound tags", () => {
   assert.equal(cleanCueText("<c.yellow>Colored</c> text"), "Colored text");
   assert.equal(cleanCueText("{\\an8}SubStation Alpha tag"), "SubStation Alpha tag");
 
+  // YouTube word-timing tags and <c> tags
+  assert.equal(cleanCueText("welcome<00:00:01.250><c> back</c><00:00:01.800><c> everyone</c>"), "welcome back everyone");
+
   // HTML entities
   assert.equal(cleanCueText("Cats &amp; dogs &quot;quote&#39; &#65; &#x42;"), 'Cats & dogs "quote\' A B');
 
@@ -105,6 +108,48 @@ test("deduplicateRollingCaptions handles YouTube rolling captions", () => {
   assert.equal(deduped[0].text, "welcome back everyone");
   assert.equal(deduped[1].text, "to today's video");
   assert.equal(deduped[2].text, "where we discuss transcripts");
+});
+
+test("realistic YouTube auto-caption VTT with word timings and rolling duplicates", () => {
+  const ytVtt = `WEBVTT
+Kind: captions
+Language: en
+
+00:00:01.000 --> 00:00:03.000
+welcome<00:00:01.250><c> back</c><00:00:01.800><c> everyone</c>
+
+00:00:03.000 --> 00:00:05.000
+welcome back everyone
+to<00:00:03.450><c> today's</c><00:00:04.100><c> video</c>
+
+00:00:05.000 --> 00:00:07.000
+to today's video
+where<00:00:05.300><c> we</c><00:00:05.900><c> build</c><00:00:06.400><c> tools</c>`;
+
+  const transcript = subtitleToText(ytVtt);
+  // Assert no "<" tag character exists in the output
+  assert.equal(transcript.includes("<"), false);
+  assert.equal(transcript.includes(">"), false);
+
+  // Assert no repeated phrase exists in output
+  assert.equal(transcript, "welcome back everyone to today's video where we build tools");
+});
+
+test("dedupeRolling option toggle is respected", () => {
+  const srtDuplicates = `1
+00:00:01,000 --> 00:00:03,000
+Line one
+
+2
+00:00:03,000 --> 00:00:05,000
+Line one
+Line two`;
+
+  const withDedupe = subtitleToText(srtDuplicates, { dedupeRolling: true });
+  assert.equal(withDedupe, "Line one Line two");
+
+  const withoutDedupe = subtitleToText(srtDuplicates, { dedupeRolling: false });
+  assert.equal(withoutDedupe, "Line one Line one Line two");
 });
 
 test("formatTranscript groups paragraphs by time gap", () => {

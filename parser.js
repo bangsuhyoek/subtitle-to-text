@@ -75,8 +75,11 @@ export function cleanCueText(rawText, options = {}) {
     text = text.replace(/<\/?v(?:\.[^ >]+)?(?:\s+[^>]+)?>/gi, "");
   }
 
-  // Strip remaining HTML / WebVTT tags (e.g. <i>, <b>, <u>, <c>, <c.yellow>, <ruby>, <rt>, etc.)
-  text = text.replace(/<\/?[a-zA-Z][^>]*>/g, "");
+  // Strip YouTube word-timing tags like <00:00:01.234>, <01:23.456>, <00:01:23,456>
+  text = text.replace(/<(?:\d{1,2}:)?\d{2}:\d{2}[.,]\d{3}>/g, "");
+
+  // Strip remaining HTML / WebVTT / inline tags (e.g. <c>, </c>, <i>, <b>, <u>, <c.yellow>, <ruby>, <rt>, etc.)
+  text = text.replace(/<[^>]+>/g, "");
 
   // Decode HTML entities
   text = decodeHtmlEntities(text);
@@ -297,7 +300,8 @@ export function formatTranscript(cues, options = {}) {
 
   for (let i = 0; i < cues.length; i++) {
     const cue = cues[i];
-    let cueText = cue.text.trim();
+    // Replace internal newlines in cue with single space for clean prose
+    let cueText = cue.text.replace(/\r?\n/g, " ").trim();
     if (!cueText) continue;
 
     let timestampPrefix = "";
@@ -357,9 +361,10 @@ export function formatTranscript(cues, options = {}) {
 }
 
 export function subtitleToText(content, options = {}) {
+  const { dedupeRolling = true } = options;
   const rawCues = parseCues(content, options);
-  const dedupedCues = deduplicateRollingCaptions(rawCues);
-  return formatTranscript(dedupedCues, options);
+  const cuesToFormat = dedupeRolling ? deduplicateRollingCaptions(rawCues) : rawCues;
+  return formatTranscript(cuesToFormat, options);
 }
 
 export function getTranscriptStats(text) {
